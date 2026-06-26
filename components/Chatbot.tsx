@@ -19,21 +19,36 @@ export default function Chatbot({ profile }: { profile: Profile }) {
     },
   ]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs]);
+  }, [msgs, loading]);
 
-  const send = (val?: string) => {
+  const send = async (val?: string) => {
     const text = (val ?? input).trim();
-    if (!text) return;
+    if (!text || loading) return;
+
     setMsgs((m) => [...m, { role: "user", text }]);
     setInput("");
-    setTimeout(
-      () => setMsgs((m) => [...m, { role: "ai", text: mockReply(text, profile) }]),
-      350
-    );
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, profile }),
+      });
+      const data = await res.json();
+      const reply =
+        res.ok && data.reply ? data.reply : mockReply(text, profile);
+      setMsgs((m) => [...m, { role: "ai", text: reply }]);
+    } catch {
+      setMsgs((m) => [...m, { role: "ai", text: mockReply(text, profile) }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,10 +77,23 @@ export default function Chatbot({ profile }: { profile: Profile }) {
             </div>
           </div>
         ))}
+
+        {loading && (
+          <div className="flex justify-start">
+            <span className="mr-2 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FFF1EC]">
+              <Sparkles size={13} className="text-coral" />
+            </span>
+            <div className="flex items-center gap-1 rounded-3xl rounded-bl-md border border-[#F0E7E2] bg-white px-3.5 py-3">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D8B5A8] [animation-delay:-0.2s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D8B5A8] [animation-delay:-0.1s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D8B5A8]" />
+            </div>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 
-      {msgs.length <= 1 && (
+      {msgs.length <= 1 && !loading && (
         <div className="mb-2 flex flex-wrap gap-2">
           {CHAT_SUGGESTIONS.map((s) => (
             <button
@@ -85,11 +113,13 @@ export default function Chatbot({ profile }: { profile: Profile }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder="궁금한 점을 입력해보세요"
-          className="w-full text-sm text-ink outline-none placeholder:text-[#C4B6AF]"
+          disabled={loading}
+          className="w-full text-sm text-ink outline-none placeholder:text-[#C4B6AF] disabled:opacity-60"
         />
         <button
           onClick={() => send()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-coral text-white transition active:scale-95"
+          disabled={loading}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-coral text-white transition active:scale-95 disabled:opacity-50"
         >
           <Send size={16} />
         </button>
