@@ -30,6 +30,7 @@ export default function Chatbot({ profile }: { profile: Profile }) {
     const text = (val ?? input).trim();
     if (!text || loading) return;
 
+    const history = msgs.slice(1); // 첫 인사 메시지는 제외
     setMsgs((m) => [...m, { role: "user", text }]);
     setInput("");
     setLoading(true);
@@ -38,7 +39,7 @@ export default function Chatbot({ profile }: { profile: Profile }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, profile }),
+        body: JSON.stringify({ message: text, profile, history }),
       });
       const data = await res.json();
       const reply =

@@ -10,6 +10,7 @@ const SYSTEM_PROMPT = `당신은 'MOM-LINK AI'의 상담 도우미입니다.
 - 임신·출산 관련 정보를 쉬운 한국어로, 짧고 친절하게 안내합니다.
 - 병원·보건소에서 무엇을 물어볼지 준비하도록 돕습니다.
 - 어려운 용어가 나오면 쉬운 말로 풀어서 설명합니다.
+- 이전 대화 내용을 기억하고 자연스럽게 이어서 대화합니다.
 
 [안전 규칙 — 반드시 지킬 것]
 - 의료 진단, 처방, 응급 판단을 하지 않습니다.
@@ -25,15 +26,20 @@ const SYSTEM_PROMPT = `당신은 'MOM-LINK AI'의 상담 도우미입니다.
 - 지시형보다 안내형 문장.
 
 [형식]
-- 답변은 3~5문장 이내로 간결하게.
+- 답변은 3~5문장 이내로 간결하게, 문장은 끝까지 완성합니다.
 - 답변 마지막에 반드시 다음 문장을 줄바꿈 후 덧붙입니다:
 "💬 이 답변은 진단이나 처방이 아니며, 정확한 판단은 담당 의료진에게 확인해주세요."`;
 
-const MODEL = "gemini-1.5-flash";
+const MODEL = "gemini-2.5-flash";
+
+interface ChatTurn {
+  role: "user" | "ai";
+  text: string;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, profile } = await req.json();
+    const { message, profile, history } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "메시지가 비어 있습니다." }, { status: 400 });
@@ -51,14 +57,25 @@ export async function POST(req: NextRequest) {
       ? `사용자 정보: 임신 ${profile.week}주차, 거주 지역 ${profile.region}.`
       : "";
 
+    // 이전 대화를 Gemini 형식으로 변환 (최근 10턴만 사용)
+    const prior = Array.isArray(history) ? (history as ChatTurn[]).slice(-10) : [];
+    const contents = prior.map((t) => ({
+      role: t.role === "user" ? "user" : "model",
+      parts: [{ text: t.text }],
+    }));
+
+    // 이번 질문 추가 (사용자 정보는 맨 앞 질문에만 덧붙임)
+    contents.push({
+      role: "user",
+      parts: [{ text: contents.length === 0 ? `${context}\n\n질문: ${message}` : message }],
+    });
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
 
     const body = {
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      contents: [
-        { role: "user", parts: [{ text: `${context}\n\n질문: ${message}` }] },
-      ],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 400 },
+      systemInstruction: { parts: [{ text: `${SYSTEM_PROMPT}\n\n${context}` }] },
+      contents,
+      generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
     };
 
     const res = await fetch(url, {
