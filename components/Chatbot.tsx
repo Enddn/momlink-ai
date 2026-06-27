@@ -5,6 +5,7 @@ import { Sparkles, Send } from "lucide-react";
 import { Profile } from "@/lib/types";
 import { mockReply, CHAT_SUGGESTIONS } from "@/data/mockChatResponses";
 import { ScreenHeader, SafetyNotice } from "@/components/ui";
+import { useT } from "@/lib/i18n";
 
 interface Msg {
   role: "ai" | "user";
@@ -12,10 +13,11 @@ interface Msg {
 }
 
 export default function Chatbot({ profile }: { profile: Profile }) {
+  const ui = useT();
   const [msgs, setMsgs] = useState<Msg[]>([
     {
       role: "ai",
-      text: `안녕하세요 🌷 MOM-LINK AI예요.\n임신 ${profile.week}주차, ${profile.region}에 맞춰 도와드릴게요. 궁금한 점을 편하게 물어봐 주세요.`,
+      text: ui.chatGreeting(profile.week, profile.region),
     },
   ]);
   const [input, setInput] = useState("");
@@ -54,7 +56,7 @@ export default function Chatbot({ profile }: { profile: Profile }) {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="AI 상담" subtitle="쉬운 말로 안내해드려요. 진단·처방은 하지 않아요." />
+      <ScreenHeader title={ui.chatTitle} subtitle={ui.chatSubtitle} />
       <div className="mb-3">
         <SafetyNotice compact />
       </div>
@@ -113,7 +115,7 @@ export default function Chatbot({ profile }: { profile: Profile }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="궁금한 점을 입력해보세요"
+          placeholder={ui.chatPlaceholder}
           disabled={loading}
           className="w-full text-sm text-ink outline-none placeholder:text-[#C4B6AF] disabled:opacity-60"
         />

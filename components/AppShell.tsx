@@ -12,6 +12,7 @@ import QuestionCards from "@/components/QuestionCardGenerator";
 import InstitutionList from "@/components/InstitutionList";
 import Chatbot from "@/components/Chatbot";
 import BottomNav, { TabId } from "@/components/BottomNav";
+import { LangProvider } from "@/lib/i18n";
 
 function Toast({ msg }: { msg: string }) {
   if (!msg) return null;
@@ -48,11 +49,12 @@ export default function AppShell() {
   };
 
   return (
+    <LangProvider lang={profile?.lang ?? "ko"}>
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#F7EFE9] to-[#ECE6F4] p-0 sm:p-6">
       <div className="relative flex h-[100dvh] w-full max-w-[420px] flex-col overflow-hidden bg-cream shadow-2xl sm:h-[860px] sm:rounded-[2.4rem] sm:border-8 sm:border-[#2B2622]">
         {!loaded ? (
           <div className="flex h-full items-center justify-center text-sm text-muted">
-            불러오는 중…
+            …
           </div>
         ) : onboarding ? (
           <div className="h-full overflow-y-auto">
@@ -100,5 +102,6 @@ export default function AppShell() {
         )}
       </div>
     </div>
+    </LangProvider>
   );
 }

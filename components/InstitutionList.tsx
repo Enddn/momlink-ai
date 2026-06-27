@@ -8,6 +8,7 @@ import {
 import { Profile, Institution } from "@/lib/types";
 import { getInstitutions, INST_TYPES } from "@/data/institutions";
 import { ScreenHeader } from "@/components/ui";
+import { useT } from "@/lib/i18n";
 
 const INST_ICON: Record<string, LucideIcon> = {
   "산부인과": Stethoscope,
@@ -17,7 +18,17 @@ const INST_ICON: Record<string, LucideIcon> = {
   "외국인 주민 지원 기관": Building2,
 };
 
-function InstitutionCard({ inst, region }: { inst: Institution; region: string }) {
+function InstitutionCard({
+  inst,
+  region,
+  hoursNotice,
+  interpretNotice,
+}: {
+  inst: Institution;
+  region: string;
+  hoursNotice: string;
+  interpretNotice: string;
+}) {
   const Icon = INST_ICON[inst.type] || Building2;
   return (
     <div className="rounded-4xl border border-[#F0E7E2] bg-white p-4">
@@ -39,50 +50,54 @@ function InstitutionCard({ inst, region }: { inst: Institution; region: string }
           <Phone size={14} className="text-mintText" /> {inst.phone}
         </span>
         <span className="flex items-center gap-1 text-[11px] text-muted">
-          <Clock size={11} /> 방문 전 운영시간·지원 언어 확인
+          <Clock size={11} /> {hoursNotice}
         </span>
       </div>
-      <p className="mt-2 text-[11px] text-[#B8A9A2]">
-        전화 전, 통역 지원이 가능한지 함께 확인하면 좋아요.
-      </p>
+      <p className="mt-2 text-[11px] text-[#B8A9A2]">{interpretNotice}</p>
     </div>
   );
 }
 
 export default function InstitutionList({ profile }: { profile: Profile }) {
+  const ui = useT();
   const [filter, setFilter] = useState("전체");
   const { list } = getInstitutions(profile.region);
   const filtered = filter === "전체" ? list : list.filter((d) => d.type === filter);
 
+  const typeLabel = (tp: string) => (tp === "전체" ? ui.filterAll : tp);
+
   return (
     <div>
-      <ScreenHeader
-        title="기관 찾기"
-        subtitle={`${profile.region}에서 도움받을 수 있는 기관이에요.`}
-      />
+      <ScreenHeader title={ui.instTitle} subtitle={ui.instSubtitle(profile.region)} />
       <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-[#FFF4EF] px-3 py-1.5 text-xs font-medium text-[#9A6A57]">
-        <AlertTriangle size={12} /> 데모용 정보입니다 · 실제 연락처와 다를 수 있어요
+        <AlertTriangle size={12} /> {ui.demoNotice}
       </div>
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {INST_TYPES.map((t) => (
+        {INST_TYPES.map((tp) => (
           <button
-            key={t}
-            onClick={() => setFilter(t)}
+            key={tp}
+            onClick={() => setFilter(tp)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-              filter === t
+              filter === tp
                 ? "border-coral bg-coral text-white"
                 : "border-[#EFE6E1] bg-white text-muted"
             }`}
           >
-            {t}
+            {typeLabel(tp)}
           </button>
         ))}
       </div>
 
       <div className="space-y-3">
         {filtered.map((inst, i) => (
-          <InstitutionCard key={i} inst={inst} region={profile.region} />
+          <InstitutionCard
+            key={i}
+            inst={inst}
+            region={profile.region}
+            hoursNotice={ui.hoursNotice}
+            interpretNotice={ui.interpretNotice}
+          />
         ))}
       </div>
     </div>

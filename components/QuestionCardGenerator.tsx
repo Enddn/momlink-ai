@@ -6,6 +6,7 @@ import { Profile, LangCode } from "@/lib/types";
 import { buildHospitalCard, buildHealthScript } from "@/lib/cardText";
 import { CARD_NOTICE, HEALTH_NOTICE } from "@/data/translations";
 import { CopyButton, ScreenHeader, SafetyNotice } from "@/components/ui";
+import { useT } from "@/lib/i18n";
 
 function GeneratedCard({
   kind,
@@ -18,6 +19,7 @@ function GeneratedCard({
   notice: Record<LangCode, string>;
   onToast: (m: string) => void;
 }) {
+  const ui = useT();
   const [text, setText] = useState<string | null>(null);
   const isHospital = kind === "hospital";
   const generate = () =>
@@ -38,13 +40,11 @@ function GeneratedCard({
           )}
         </span>
         <h2 className="text-base font-bold text-ink">
-          {isHospital ? "병원 방문 질문 카드" : "보건소 문의 문장"}
+          {isHospital ? ui.hospitalCardTitle : ui.healthScriptTitle}
         </h2>
       </div>
       <p className="mb-4 text-sm text-muted">
-        {isHospital
-          ? "병원 접수·진료 때 화면을 보여주세요."
-          : "보건소에 전화하거나 방문할 때 읽거나 보여주세요."}
+        {isHospital ? ui.hospitalCardSubtitle : ui.healthScriptSubtitle}
       </p>
 
       {!text ? (
@@ -54,13 +54,13 @@ function GeneratedCard({
             isHospital ? "bg-coral hover:bg-coralDark" : "bg-mintText hover:bg-[#379070]"
           }`}
         >
-          {isHospital ? "병원 질문 카드 만들기" : "보건소 문의 문장 만들기"}
+          {isHospital ? ui.hospitalCardBtn : ui.healthScriptBtn}
         </button>
       ) : (
         <div className="space-y-3">
           <div className="rounded-3xl bg-[#FFFBF9] p-4">
             <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-[#FFF1EC] px-2.5 py-1 text-[11px] font-semibold text-coral">
-              {isHospital ? "병원 접수 시 보여주세요" : "보건소에 보여주세요"}
+              {isHospital ? ui.hospitalCardBadge : ui.healthScriptBadge}
             </div>
             <p className="whitespace-pre-line text-[15px] leading-relaxed text-ink">{text}</p>
             <div className="mt-3 flex items-start gap-2 rounded-xl bg-white p-3">
@@ -75,7 +75,7 @@ function GeneratedCard({
           </div>
           <div className="flex items-center justify-between">
             <button onClick={generate} className="text-xs font-medium text-muted underline">
-              다시 만들기
+              {ui.regenerate}
             </button>
             <CopyButton text={text} onToast={onToast} />
           </div>
@@ -92,9 +92,10 @@ export default function QuestionCards({
   profile: Profile;
   onToast: (m: string) => void;
 }) {
+  const ui = useT();
   return (
     <div className="space-y-4">
-      <ScreenHeader title="질문 카드" subtitle="병원과 보건소에서 그대로 보여줄 수 있는 문장을 만들어요." />
+      <ScreenHeader title={ui.cardsTitle} subtitle={ui.cardsSubtitle} />
       <GeneratedCard kind="hospital" profile={profile} notice={CARD_NOTICE} onToast={onToast} />
       <GeneratedCard kind="health" profile={profile} notice={HEALTH_NOTICE} onToast={onToast} />
       <SafetyNotice compact />

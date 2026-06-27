@@ -6,17 +6,16 @@ import {
 } from "lucide-react";
 import { LangCode } from "@/lib/types";
 import { langLabel } from "@/data/translations";
-import { SAFETY_TEXT } from "@/lib/cardText";
+import { useT } from "@/lib/i18n";
 
 export function CopyButton({
   text,
-  label = "복사하기",
   onToast,
 }: {
   text: string;
-  label?: string;
   onToast?: (m: string) => void;
 }) {
+  const ui = useT();
   const [copied, setCopied] = useState(false);
   const handle = async () => {
     try {
@@ -30,7 +29,7 @@ export function CopyButton({
       document.body.removeChild(ta);
     }
     setCopied(true);
-    onToast?.("복사되었습니다");
+    onToast?.(ui.copiedToast);
     setTimeout(() => setCopied(false), 1600);
   };
   return (
@@ -39,7 +38,7 @@ export function CopyButton({
       className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-95 hover:bg-coralDark"
     >
       {copied ? <Check size={16} /> : <Copy size={16} />}
-      {copied ? "복사됨" : label}
+      {copied ? ui.copied : ui.copy}
     </button>
   );
 }
@@ -54,6 +53,7 @@ export function LanguageBadge({ code }: { code: LangCode }) {
 }
 
 export function SafetyNotice({ compact }: { compact?: boolean }) {
+  const ui = useT();
   return (
     <div
       className={`flex gap-2.5 rounded-3xl border border-[#F3D9CF] bg-[#FFF4EF] ${
@@ -62,7 +62,7 @@ export function SafetyNotice({ compact }: { compact?: boolean }) {
     >
       <ShieldCheck size={compact ? 18 : 20} className="mt-0.5 shrink-0 text-coral" />
       <p className={`leading-relaxed text-[#9A6A57] ${compact ? "text-xs" : "text-[13px]"}`}>
-        {SAFETY_TEXT}
+        {ui.safetyNotice}
       </p>
     </div>
   );
