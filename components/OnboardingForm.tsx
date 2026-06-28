@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Heart } from "lucide-react";
@@ -50,7 +50,7 @@ export default function OnboardingForm({
 }) {
   const [week, setWeek] = useState(initial?.week ?? 18);
   const [region, setRegion] = useState(initial?.region ?? "경기도 안산시");
-  const [lang, setLang] = useState<LangCode>(initial?.lang ?? "vi");
+  const [lang, setLang] = useState<LangCode>(initial?.lang ?? "ko");
   const [insurance, setInsurance] = useState<Profile["insurance"]>(initial?.insurance ?? "있음");
   const [multicultural, setMulticultural] = useState<Profile["multicultural"]>(
     initial?.multicultural ?? "해당"
@@ -153,3 +153,5 @@ export default function OnboardingForm({
     </div>
   );
 }
+
+
